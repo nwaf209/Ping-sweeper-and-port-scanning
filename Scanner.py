@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 import threading
 import queue
 import time
+import nmap3
+import nmap
 
 
 class IP:
@@ -67,14 +69,13 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         loadUi("App.ui", self)
         self.pushButton.clicked.connect(self.scan)
+        self.pushButton_2.clicked.connect(self.port_scan_all)
 
     def scan(self):
         MainWindow.p_val = []
         self.pBar.reset()
         self.pBar.setValue(0)
-        c = self.tableWidget.rowCount()
-        for rows in range(c):
-            self.tableWidget.removeRow(0)
+        self.treeWidget.clear()
         config = check_output('ipconfig /all', universal_newlines=True)
         networks = config.split('IPv4 Address. . . . . . . . . . . :')
         maxp = (len(networks) - 1) * 255
@@ -84,19 +85,24 @@ class MainWindow(QMainWindow):
             t.start()
             parent_threads.append(t)
 
+    def port_scan_all(self):
+        nm = nmap.PortScanner()
+        nm.scan('192.168.100.0/24', '1-65535')
+        for host in nm.all_hosts():
+            print(nm[host].all_tcp())
+
     def evt_update(self, val):
         MainWindow.p_val.append(val)
         self.pBar.setValue(len(MainWindow.p_val))
 
     def add_row(self, entry):
-        count = self.tableWidget.rowCount()
-        self.tableWidget.setRowCount(count + 1)
-        self.tableWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(entry.status))
-        self.tableWidget.setItem(count, 1, QtWidgets.QTableWidgetItem(entry.ip))
-        self.tableWidget.setItem(count, 2, QtWidgets.QTableWidgetItem(entry.mac))
-        self.tableWidget.setItem(count, 3, QtWidgets.QTableWidgetItem(entry.hostname))
-        self.tableWidget.setItem(count, 4, QtWidgets.QTableWidgetItem(entry.os))
-        self.tableWidget.setItem(count, 5, QtWidgets.QTableWidgetItem(entry.manufacturer))
+        item = QtWidgets.QTreeWidgetItem(self.treeWidget)
+        item.setText(0, entry.status)
+        item.setText(1, entry.ip)
+        item.setText(2, entry.mac)
+        item.setText(3, entry.hostname)
+        item.setText(4, entry.os)
+        item.setText(5, entry.manufacturer)
 
     def ping(self, p, subnet):
         status = 'alive'
@@ -200,7 +206,7 @@ class MainWindow(QMainWindow):
             self.mt = MainThread(self, subnet, x)
             self.mt.update.connect(self.evt_update)
             self.mt.start()
-            self.mt.wait(10)
+            self.mt.wait(3)
 
 
 t = threading.Thread(target=run)

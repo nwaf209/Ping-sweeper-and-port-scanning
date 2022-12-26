@@ -40,7 +40,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <property name="topMargin">
@@ -70,10 +70,22 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="font">
+           <font>
+            <pointsize>16</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Ports scan</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
-       <widget class="QTableWidget" name="tableWidget">
+       <widget class="QTreeWidget" name="treeWidget">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -83,23 +95,17 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <attribute name="horizontalHeaderCascadingSectionResizes">
+        <attribute name="headerCascadingSectionResizes">
          <bool>true</bool>
         </attribute>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>190</number>
+        <attribute name="headerDefaultSectionSize">
+         <number>170</number>
         </attribute>
-        <attribute name="horizontalHeaderStretchLastSection">
+        <attribute name="headerHighlightSections">
          <bool>true</bool>
         </attribute>
-        <attribute name="verticalHeaderCascadingSectionResizes">
+        <attribute name="headerShowSortIndicator" stdset="0">
          <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderShowSortIndicator" stdset="0">
-         <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderStretchLastSection">
-         <bool>false</bool>
         </attribute>
         <column>
          <property name="text">
