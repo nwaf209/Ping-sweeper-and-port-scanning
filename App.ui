@@ -29,7 +29,7 @@
    <bool>false</bool>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Ping Sweeper</string>
   </property>
   <property name="styleSheet">
    <string notr="true">/*
@@ -2270,7 +2270,7 @@ p, li { white-space: pre-wrap; }
         </attribute>
         <column>
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </column>
         <column>
