@@ -7,7 +7,6 @@
 # TODO Time column for each host port scan time to complete
 # TODO Faster port scanning if possible
 # TODO Return child dropdown arrow
-# TODO Allow individual host selection
 # TODO Update OS when port scan gets it
 # TODO Download as csv implemented
 # TODO View implemented
@@ -150,6 +149,7 @@ class MainWindow(QMainWindow):
 
     def port_scan(self):
         MainWindow.p_val = []
+        selected_ips = []
         self.pBar.reset()
         self.pBar.setValue(0)
         self.pBar.setMaximum(len(MainWindow.ips))
@@ -190,6 +190,36 @@ class MainWindow(QMainWindow):
                     t.start()
             elif selected == 'common':
                 for ip in MainWindow.ips:
+                    t = threading.Thread(target=MainWindow.port_scan_common, args=[self, ip, command])
+                    t.start()
+        elif ai == 'Individual Hosts':
+            for ip in MainWindow.ips:
+                t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
+                if t.checkState(0) == 2:
+                    selected_ips.append(ip)
+            if selected == 'all':
+                for ip in selected_ips:
+                    t = threading.Thread(target=MainWindow.port_scan_all, args=[self, ip, command])
+                    t.start()
+            elif selected == 'singal port':
+                for ip in selected_ips:
+                    p = self.spinBox_3.value()
+                    t = threading.Thread(target=MainWindow.port_scan_singal, args=[self, ip, str(p), command])
+                    t.start()
+            elif selected == 'range':
+                for ip in selected_ips:
+                    fp = self.spinBox.value()
+                    lp = self.spinBox_2.value()
+                    if fp < lp:
+                        range = str(fp) + '-' + str(lp)
+                    elif lp > fp:
+                        range = str(lp) + '-' + str(fp)
+                    elif fp == lp:
+                        range = str(lp)
+                    t = threading.Thread(target=MainWindow.port_scan_range, args=[self, ip, range, command])
+                    t.start()
+            elif selected == 'common':
+                for ip in selected_ips:
                     t = threading.Thread(target=MainWindow.port_scan_common, args=[self, ip, command])
                     t.start()
 
@@ -304,12 +334,13 @@ class MainWindow(QMainWindow):
 
     def add_row(self, entry):
         item = QtWidgets.QTreeWidgetItem(self.treeWidget)
-        item.setText(0, entry.status)
-        item.setText(1, entry.ip)
-        item.setText(2, entry.mac)
-        item.setText(3, entry.hostname)
-        item.setText(4, entry.os)
-        item.setText(5, entry.manufacturer)
+        item.setCheckState(0, Qt.CheckState.Unchecked)
+        item.setText(1, entry.status)
+        item.setText(2, entry.ip)
+        item.setText(3, entry.mac)
+        item.setText(4, entry.hostname)
+        item.setText(5, entry.os)
+        item.setText(6, entry.manufacturer)
         MainWindow.ips.append(entry.ip)
         # child = QtWidgets.QTreeWidgetItem(item)
         # child.setText(0, 'Port')
@@ -318,12 +349,12 @@ class MainWindow(QMainWindow):
         # child.setText(3, 'Version')
 
     def add_child(self, ip, entry):
-        t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 1)[0]
+        t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
         item = QtWidgets.QTreeWidgetItem(t)
-        item.setText(0, str(entry.port))
-        item.setText(1, entry.name)
-        item.setText(2, entry.product)
-        item.setText(3, entry.version)
+        item.setText(1, str(entry.port))
+        item.setText(2, entry.name)
+        item.setText(3, entry.product)
+        item.setText(4, entry.version)
 
     def ping(self, p, subnet):
         status = 'alive'

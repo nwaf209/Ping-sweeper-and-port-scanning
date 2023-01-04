@@ -1981,7 +1981,7 @@ QSint--ActionGroup QToolButton[class=&quot;action&quot;]:on {
           </item>
           <item>
            <property name="text">
-            <string>Indivisual Hosts</string>
+            <string>Individual Hosts</string>
            </property>
           </item>
          </widget>
@@ -2268,6 +2268,11 @@ p, li { white-space: pre-wrap; }
         <attribute name="headerShowSortIndicator" stdset="0">
          <bool>true</bool>
         </attribute>
+        <column>
+         <property name="text">
+          <string> </string>
+         </property>
+        </column>
         <column>
          <property name="text">
           <string>Status</string>
