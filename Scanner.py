@@ -9,7 +9,6 @@
 # TODO Return child dropdown arrow
 # TODO Update OS when port scan gets it
 # TODO Download as csv implemented
-# TODO View implemented
 # TODO About implemented
 # TODO App name and icon changes
 # TODO complete .exe
@@ -128,6 +127,48 @@ class MainWindow(QMainWindow):
         loadUi("App.ui", self)
         self.pushButton.clicked.connect(self.scan)
         self.pushButton_2.clicked.connect(self.port_scan)
+        self.actionStatus.changed.connect(self.hide_status)
+        self.actionIP.changed.connect(self.hide_ip)
+        self.actionMac.changed.connect(self.hide_mac)
+        self.actionHost_Name.changed.connect(self.hide_host_name)
+        self.actionOS.changed.connect(self.hide_os)
+        self.actionManufacturer.changed.connect(self.hide_manu)
+
+    def hide_status(self):
+        if not self.actionStatus.isChecked():
+            self.treeWidget.setColumnHidden(1, True)
+        else:
+            self.treeWidget.setColumnHidden(1, False)
+
+    def hide_ip(self):
+        if not self.actionIP.isChecked():
+            self.treeWidget.setColumnHidden(2, True)
+        else:
+            self.treeWidget.setColumnHidden(2, False)
+
+    def hide_mac(self):
+        if not self.actionMac.isChecked():
+            self.treeWidget.setColumnHidden(3, True)
+        else:
+            self.treeWidget.setColumnHidden(3, False)
+
+    def hide_host_name(self):
+        if not self.actionHost_Name.isChecked():
+            self.treeWidget.setColumnHidden(4, True)
+        else:
+            self.treeWidget.setColumnHidden(4, False)
+
+    def hide_os(self):
+        if not self.actionOS.isChecked():
+            self.treeWidget.setColumnHidden(5, True)
+        else:
+            self.treeWidget.setColumnHidden(5, False)
+
+    def hide_manu(self):
+        if not self.actionManufacturer.isChecked():
+            self.treeWidget.setColumnHidden(6, True)
+        else:
+            self.treeWidget.setColumnHidden(6, False)
 
     def scan(self):
         MainWindow.p_val = []
