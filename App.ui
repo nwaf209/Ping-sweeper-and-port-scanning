@@ -2122,7 +2122,7 @@ QSint--ActionGroup QToolButton[class=&quot;action&quot;]:on {
         <item>
          <widget class="QSpinBox" name="spinBox">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
@@ -2160,7 +2160,7 @@ QSint--ActionGroup QToolButton[class=&quot;action&quot;]:on {
         <item>
          <widget class="QSpinBox" name="spinBox_2">
           <property name="enabled">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
@@ -2197,6 +2197,9 @@ QSint--ActionGroup QToolButton[class=&quot;action&quot;]:on {
         </item>
         <item>
          <widget class="QSpinBox" name="spinBox_3">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
             <horstretch>0</horstretch>

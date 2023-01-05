@@ -6,6 +6,8 @@
 # TODO fully functional progress bar
 # TODO Time column for each host port scan time to complete
 # TODO Faster port scanning if possible
+# TODO Proper indication of started scanning operations
+# TODO Proper input disabling when scanning operations start
 # TODO Return child dropdown arrow
 # TODO Update OS when port scan gets it
 # TODO Download as csv implemented
@@ -96,6 +98,21 @@ class MainWindow(QMainWindow):
         self.actionHost_Name.changed.connect(self.hide_host_name)
         self.actionOS.changed.connect(self.hide_os)
         self.actionManufacturer.changed.connect(self.hide_manu)
+        self.comboBox.currentIndexChanged.connect(self.selected_ports_disabler)
+
+    def selected_ports_disabler(self):
+        if self.comboBox.currentIndex() == 1:
+            self.spinBox_3.setEnabled(True)
+            self.spinBox.setEnabled(False)
+            self.spinBox_2.setEnabled(False)
+        elif self.comboBox.currentIndex() == 2:
+            self.spinBox_3.setEnabled(False)
+            self.spinBox.setEnabled(True)
+            self.spinBox_2.setEnabled(True)
+        else:
+            self.spinBox_3.setEnabled(False)
+            self.spinBox.setEnabled(False)
+            self.spinBox_2.setEnabled(False)
 
     def hide_status(self):
         if not self.actionStatus.isChecked():
