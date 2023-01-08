@@ -8,17 +8,14 @@
 # TODO Faster port scanning if possible
 # TODO Proper indication of started scanning operations
 # TODO Proper input disabling when scanning operations start
-# TODO Return child dropdown arrow
 # TODO Update OS when port scan gets it
-# TODO Download as csv implemented
-# TODO About implemented
 # TODO App name and icon changes
 # TODO complete .exe
 
 
 import subprocess
 import sys
-import os
+import csv
 import platform
 from subprocess import check_output
 import requests
@@ -99,6 +96,38 @@ class MainWindow(QMainWindow):
         self.actionOS.changed.connect(self.hide_os)
         self.actionManufacturer.changed.connect(self.hide_manu)
         self.comboBox.currentIndexChanged.connect(self.selected_ports_disabler)
+        self.actionDownload_as_csv_file.triggered.connect(self.download)
+        self.actionAbout.triggered.connect(self.about)
+
+    def about(self):
+        msg = QtWidgets.QMessageBox()
+        msg.setWindowTitle('About')
+        msg.setGeometry(800, 500, 900, 900)
+        msg.setText('This is a Ping Sweep program with some port scanning functionalities and a GUI')
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        x = msg.exec_()
+
+    def download(self):
+        header = ['', 'Status', 'IP', 'Mac', 'Host Name', 'OS', 'Manufacturer']
+        f = open('ping_data.csv', 'w', newline='')
+        writer = csv.writer(f)
+        writer.writerow(header)
+        for i in range(len(MainWindow.ips)):
+            x = self.treeWidget.topLevelItem(i)
+            row = []
+            for p in range(7):
+                row.append(x.text(p))
+            writer.writerow(row)
+            cc = x.childCount()
+            if cc > 0:
+                for q in range(cc):
+                    ch = x.child(q)
+                    row = []
+                    for p in range(4):
+                        row.append(ch.text(p))
+                    writer.writerow(row)
+        f.close()
+
 
     def selected_ports_disabler(self):
         if self.comboBox.currentIndex() == 1:
