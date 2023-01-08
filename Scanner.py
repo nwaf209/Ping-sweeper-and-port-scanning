@@ -4,10 +4,10 @@
 # TODO Code clean up & comments
 # TODO Start, Stop and Resume functionality
 # TODO fully functional progress bar
-# TODO Time column for each host port scan time to complete
-# TODO Faster port scanning if possible
 # TODO Proper indication of started scanning operations
 # TODO Proper input disabling when scanning operations start
+# TODO Faster port scanning if possible
+# TODO Time column for each host port scan time to complete
 # TODO Update OS when port scan gets it
 # TODO App name and icon changes
 # TODO complete .exe
@@ -128,7 +128,6 @@ class MainWindow(QMainWindow):
                     writer.writerow(row)
         f.close()
 
-
     def selected_ports_disabler(self):
         if self.comboBox.currentIndex() == 1:
             self.spinBox_3.setEnabled(True)
@@ -200,6 +199,8 @@ class MainWindow(QMainWindow):
     def port_scan(self):
         MainWindow.p_val = []
         selected_ips = []
+        # self.pushButton.setEnabled(False)
+        # self.pushButton_2.setEnabled(False)
         self.pBar.reset()
         self.pBar.setValue(0)
         self.pBar.setMaximum(len(MainWindow.ips))
@@ -281,12 +282,13 @@ class MainWindow(QMainWindow):
             nm.scan(hosts=ip, arguments=args, timeout=700)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
+        #    MainWindow.evt_update(self, 0)
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
-        #    MainWindow.evt_update(self, 0)
         if out:
             print(ip + '  Scan Complete is out')
+        #    MainWindow.evt_update(self, 0)
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -295,7 +297,7 @@ class MainWindow(QMainWindow):
                                   nm[ip]['tcp'][int(port)]['version'])
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
-            #           MainWindow.evt_update(self, 0)
+            #            MainWindow.evt_update(self, 0)
             print(ip + '  Scan Complete')
 
     def port_scan_range(self, ip, range, method):
@@ -356,12 +358,13 @@ class MainWindow(QMainWindow):
             nm.scan(hosts=ip, arguments=args, timeout=150)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
+        #    MainWindow.evt_update(self, 0)
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
-        #    MainWindow.evt_update(self, 0)
         if out:
             print(ip + '  Scan Complete is out')
+        #    MainWindow.evt_update(self, 0)
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -370,8 +373,8 @@ class MainWindow(QMainWindow):
                                   nm[ip]['tcp'][int(port)]['version'])
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
-            #           MainWindow.evt_update(self, 0)
         print(ip + '  Scan Complete')
+        # MainWindow.evt_update(self, 0)
 
     def evt_update(self, val):
         MainWindow.p_val.append(val)
@@ -509,7 +512,7 @@ class MainWindow(QMainWindow):
             self.mt = MainThread(self, subnet, x)
             self.mt.update.connect(self.evt_update)
             self.mt.start()
-            self.mt.wait(4)
+            self.mt.wait(1)
 
 
 t = threading.Thread(target=run)
