@@ -3,14 +3,14 @@
 # TODO GUI Polishing
 # TODO Code clean up & comments
 # TODO Start, Stop and Resume functionality
-# TODO fully functional progress bar
 # TODO Proper indication of started scanning operations
-# TODO Proper input disabling when scanning operations start
 # TODO Faster port scanning if possible
 # TODO Time column for each host port scan time to complete
 # TODO Update OS when port scan gets it
 # TODO App name and icon changes
 # TODO complete .exe
+
+#
 
 
 import subprocess
@@ -19,7 +19,7 @@ import csv
 import platform
 from subprocess import check_output
 import requests
-from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -38,6 +38,15 @@ class IP:
         self.manufacturer = manufacturer
         self.os = osys
         self.status = status
+
+
+class Pass:
+    def __int__(self, ip, command, range, port, method):
+        self.ip = ip
+        self.command = command
+        self.range = range
+        self.port = port
+        self.method = method
 
 
 class Port:
@@ -67,19 +76,47 @@ parent_threads = []
 threads = []
 
 
+# noinspection PyUnresolvedReferences
 class MainThread(QThread):
-    def __init__(self, w, subnet, p):
-        super(QThread, self).__init__()
-        self.__w = w
-        self.__subnet = subnet
-        self.__p = p
+
     update = pyqtSignal(int)
 
+    def __init__(self, *args):
+        super(QThread, self).__init__()
+        if len(args) == 3:
+            self.__w = args[0]
+            self.__subnet = args[1]
+            self.__p = args[2]
+            self.__arg = len(args)
+        elif len(args) == 6:
+            self.__w = args[0]
+            self.__ip = args[1]
+            self.__command = args[2]
+            self.__range = args[3]
+            self.__port = args[4]
+            self.__method = args[5]
+            self.__arg = len(args)
+
     def run(self):
-        val = MainWindow.ping(self.__w, self.__p, self.__subnet)
-        self.update.emit(val)
+        if self.__arg == 3:
+            val = MainWindow.ping(self.__w, self.__p, self.__subnet)
+            self.update.emit(val)
+        elif self.__arg == 6:
+            if self.__method == 0:
+                val = MainWindow.port_scan_all(self.__w, self.__ip, self.__command)
+                self.update.emit(val)
+            elif self.__method == 1:
+                val = MainWindow.port_scan_singal(self.__w, self.__ip, self.__port, self.__command)
+                self.update.emit(val)
+            elif self.__method == 2:
+                val = MainWindow.port_scan_range(self.__w, self.__ip, self.__range, self.__command)
+                self.update.emit(val)
+            elif self.__method == 3:
+                val = MainWindow.port_scan_common(self.__w, self.__ip, self.__command)
+                self.update.emit(val)
 
 
+# noinspection PyUnresolvedReferences
 class MainWindow(QMainWindow):
     p_val = []
     ips = []
@@ -192,20 +229,20 @@ class MainWindow(QMainWindow):
         maxp = (len(networks) - 1) * 255
         self.pBar.setMaximum(maxp)
         for i in range(len(networks) - 1):
-            t = threading.Thread(target=MainWindow.multi_network, args=[self, networks, i])
-            t.start()
-            parent_threads.append(t)
+            tt = threading.Thread(target=MainWindow.multi_network, args=[self, networks, i])
+            tt.start()
 
     def port_scan(self):
         MainWindow.p_val = []
         selected_ips = []
-        # self.pushButton.setEnabled(False)
-        # self.pushButton_2.setEnabled(False)
+        self.pushButton.setEnabled(False)
+        self.pushButton_2.setEnabled(False)
         self.pBar.reset()
         self.pBar.setValue(0)
         self.pBar.setMaximum(len(MainWindow.ips))
         ai = self.comboBox_3.currentText()
         method = self.comboBox_2.currentIndex()
+        command = ''
         if method == 0:
             command = '-sT'
         elif method == 1:
@@ -220,59 +257,78 @@ class MainWindow(QMainWindow):
         if ai == 'All Hosts':
             if selected == 'all':
                 for ip in MainWindow.ips:
-                    t = threading.Thread(target=MainWindow.port_scan_all, args=[self, ip, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', '', 0)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'singal port':
                 for ip in MainWindow.ips:
                     p = self.spinBox_3.value()
-                    t = threading.Thread(target=MainWindow.port_scan_singal, args=[self, ip, str(p), command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', p, 1)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'range':
                 for ip in MainWindow.ips:
                     fp = self.spinBox.value()
                     lp = self.spinBox_2.value()
+                    range = ''
                     if fp < lp:
                         range = str(fp) + '-' + str(lp)
                     elif lp > fp:
                         range = str(lp) + '-' + str(fp)
                     elif fp == lp:
                         range = str(lp)
-                    t = threading.Thread(target=MainWindow.port_scan_range, args=[self, ip, range, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, range, '', 2)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'common':
                 for ip in MainWindow.ips:
-                    t = threading.Thread(target=MainWindow.port_scan_common, args=[self, ip, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', '', 3)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
         elif ai == 'Individual Hosts':
             for ip in MainWindow.ips:
                 t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
                 if t.checkState(0) == 2:
                     selected_ips.append(ip)
+            self.pBar.setMaximum(len(selected_ips))
             if selected == 'all':
                 for ip in selected_ips:
-                    t = threading.Thread(target=MainWindow.port_scan_all, args=[self, ip, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', '', 0)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'singal port':
                 for ip in selected_ips:
                     p = self.spinBox_3.value()
-                    t = threading.Thread(target=MainWindow.port_scan_singal, args=[self, ip, str(p), command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', p, 1)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'range':
                 for ip in selected_ips:
                     fp = self.spinBox.value()
                     lp = self.spinBox_2.value()
+                    range = ''
                     if fp < lp:
                         range = str(fp) + '-' + str(lp)
                     elif lp > fp:
                         range = str(lp) + '-' + str(fp)
                     elif fp == lp:
                         range = str(lp)
-                    t = threading.Thread(target=MainWindow.port_scan_range, args=[self, ip, range, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, range, '', 2)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
             elif selected == 'common':
                 for ip in selected_ips:
-                    t = threading.Thread(target=MainWindow.port_scan_common, args=[self, ip, command])
-                    t.start()
+                    tht = MainThread(self, ip, command, '', '', 3)
+                    tht.update.connect(self.evt_update)
+                    tht.start()
+                    tht.wait(5)
 
     def port_scan_all(self, ip, method):
         out = False
@@ -282,13 +338,12 @@ class MainWindow(QMainWindow):
             nm.scan(hosts=ip, arguments=args, timeout=700)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
-        #    MainWindow.evt_update(self, 0)
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
             print(ip + '  Scan Complete is out')
-        #    MainWindow.evt_update(self, 0)
+            return 0
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -297,8 +352,8 @@ class MainWindow(QMainWindow):
                                   nm[ip]['tcp'][int(port)]['version'])
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
-            #            MainWindow.evt_update(self, 0)
             print(ip + '  Scan Complete')
+            return 0
 
     def port_scan_range(self, ip, range, method):
         out = False
@@ -311,9 +366,9 @@ class MainWindow(QMainWindow):
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
-        #    MainWindow.evt_update(self, 0)
         if out:
             print(ip + '  Scan Complete is out')
+            return 0
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -322,8 +377,8 @@ class MainWindow(QMainWindow):
                                   nm[ip]['tcp'][int(port)]['version'])
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
-            #           MainWindow.evt_update(self, 0)
             print(ip + '  Scan Complete')
+            return 0
 
     def port_scan_common(self, ip, method):
         out = False
@@ -336,9 +391,9 @@ class MainWindow(QMainWindow):
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
-        #    MainWindow.evt_update(self, 0)
         if out:
             print(ip + '  Scan Complete is out')
+            return 0
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -347,8 +402,8 @@ class MainWindow(QMainWindow):
                                   nm[ip]['tcp'][int(port)]['version'])
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
-            #           MainWindow.evt_update(self, 0)
             print(ip + '  Scan Complete')
+            return 0
 
     def port_scan_singal(self, ip, p, method):
         out = False
@@ -358,13 +413,12 @@ class MainWindow(QMainWindow):
             nm.scan(hosts=ip, arguments=args, timeout=150)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
-        #    MainWindow.evt_update(self, 0)
             return 0
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
             print(ip + '  Scan Complete is out')
-        #    MainWindow.evt_update(self, 0)
+            return 0
         if not out:
             for proto in nm[ip].all_protocols():
                 for port in nm[ip].all_tcp():
@@ -374,7 +428,7 @@ class MainWindow(QMainWindow):
                         MainWindow.add_child(self, ip, pp)
                         print('done  ' + ip + ' ' + str(port))
         print(ip + '  Scan Complete')
-        # MainWindow.evt_update(self, 0)
+        return 0
 
     def evt_update(self, val):
         MainWindow.p_val.append(val)
@@ -395,11 +449,6 @@ class MainWindow(QMainWindow):
         item.setText(5, entry.os)
         item.setText(6, entry.manufacturer)
         MainWindow.ips.append(entry.ip)
-        # child = QtWidgets.QTreeWidgetItem(item)
-        # child.setText(0, 'Port')
-        # child.setText(1, 'Name')
-        # child.setText(2, 'Product')
-        # child.setText(3, 'Version')
 
     def add_child(self, ip, entry):
         t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
@@ -509,10 +558,10 @@ class MainWindow(QMainWindow):
         subnet = '.'.join(mask)
         self.textEdit.insertPlainText(subnet + '0/24  ')
         for x in range(255):
-            self.mt = MainThread(self, subnet, x)
-            self.mt.update.connect(self.evt_update)
-            self.mt.start()
-            self.mt.wait(1)
+            mt = MainThread(self, subnet, x)
+            mt.update.connect(self.evt_update)
+            mt.start()
+            mt.wait(10)
 
 
 t = threading.Thread(target=run)
