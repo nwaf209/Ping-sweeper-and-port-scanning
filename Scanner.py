@@ -5,8 +5,6 @@
 # TODO Start, Stop and Resume functionality
 # TODO Proper indication of started scanning operations
 # TODO Faster port scanning if possible
-# TODO Time column for each host port scan time to complete
-# TODO Update OS when port scan gets it
 # TODO App name and icon changes
 # TODO complete .exe
 
@@ -132,6 +130,7 @@ class MainWindow(QMainWindow):
         self.actionHost_Name.changed.connect(self.hide_host_name)
         self.actionOS.changed.connect(self.hide_os)
         self.actionManufacturer.changed.connect(self.hide_manu)
+        self.actionTime.changed.connect(self.hide_time)
         self.comboBox.currentIndexChanged.connect(self.selected_ports_disabler)
         self.actionDownload_as_csv_file.triggered.connect(self.download)
         self.actionAbout.triggered.connect(self.about)
@@ -215,6 +214,12 @@ class MainWindow(QMainWindow):
         else:
             self.treeWidget.setColumnHidden(6, False)
 
+    def hide_time(self):
+        if not self.actionTime.isChecked():
+            self.treeWidget.setColumnHidden(7, True)
+        else:
+            self.treeWidget.setColumnHidden(7, False)
+
     def scan(self):
         MainWindow.p_val = []
         MainWindow.ips = []
@@ -260,14 +265,14 @@ class MainWindow(QMainWindow):
                     tht = MainThread(self, ip, command, '', '', 0)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'singal port':
                 for ip in MainWindow.ips:
                     p = self.spinBox_3.value()
                     tht = MainThread(self, ip, command, '', p, 1)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'range':
                 for ip in MainWindow.ips:
                     fp = self.spinBox.value()
@@ -282,13 +287,13 @@ class MainWindow(QMainWindow):
                     tht = MainThread(self, ip, command, range, '', 2)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'common':
                 for ip in MainWindow.ips:
                     tht = MainThread(self, ip, command, '', '', 3)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
         elif ai == 'Individual Hosts':
             for ip in MainWindow.ips:
                 t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
@@ -300,14 +305,14 @@ class MainWindow(QMainWindow):
                     tht = MainThread(self, ip, command, '', '', 0)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'singal port':
                 for ip in selected_ips:
                     p = self.spinBox_3.value()
                     tht = MainThread(self, ip, command, '', p, 1)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'range':
                 for ip in selected_ips:
                     fp = self.spinBox.value()
@@ -322,23 +327,25 @@ class MainWindow(QMainWindow):
                     tht = MainThread(self, ip, command, range, '', 2)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
             elif selected == 'common':
                 for ip in selected_ips:
                     tht = MainThread(self, ip, command, '', '', 3)
                     tht.update.connect(self.evt_update)
                     tht.start()
-                    tht.wait(5)
+                    tht.wait(30)
 
     def port_scan_all(self, ip, method):
         out = False
-        args = 'nmap ' + method + ' -sV -p 1-65535 -Pn'
+        args = 'nmap ' + method + ' -sV -p 1-65535 -O -Pn'
         nm = nmap.PortScanner()
         try:
-            nm.scan(hosts=ip, arguments=args, timeout=700)
+            nm.scan(hosts=ip, arguments=args, timeout=900)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
             return 0
+        xx = nm.scanstats()
+        timee = xx['elapsed']
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
@@ -350,20 +357,23 @@ class MainWindow(QMainWindow):
                     if nm[ip][proto][port]['state'] == 'open' or nm[ip][proto][port]['state'] == 'filtered':
                         pp = Port(port, nm[ip]['tcp'][int(port)]['name'], nm[ip]['tcp'][int(port)]['product'],
                                   nm[ip]['tcp'][int(port)]['version'])
-                        MainWindow.add_child(self, ip, pp)
+                        os = nm[ip]['osmatch'][0]['name']
+                        MainWindow.add_child(self, ip, pp, timee, os)
                         print('done  ' + ip + ' ' + str(port))
             print(ip + '  Scan Complete')
             return 0
 
     def port_scan_range(self, ip, range, method):
         out = False
-        args = 'nmap ' + method + ' -sV -p ' + str(range) + ' -Pn'
+        args = 'nmap ' + method + ' -sV -p ' + str(range) + ' -O -Pn'
         nm = nmap.PortScanner()
         try:
             nm.scan(hosts=ip, arguments=args, timeout=700)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
             return 0
+        xx = nm.scanstats()
+        timee = xx['elapsed']
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
@@ -375,20 +385,23 @@ class MainWindow(QMainWindow):
                     if nm[ip][proto][port]['state'] == 'open' or nm[ip][proto][port]['state'] == 'filtered':
                         pp = Port(port, nm[ip]['tcp'][int(port)]['name'], nm[ip]['tcp'][int(port)]['product'],
                                   nm[ip]['tcp'][int(port)]['version'])
-                        MainWindow.add_child(self, ip, pp)
+                        os = nm[ip]['osmatch'][0]['name']
+                        MainWindow.add_child(self, ip, pp, timee, os)
                         print('done  ' + ip + ' ' + str(port))
             print(ip + '  Scan Complete')
             return 0
 
     def port_scan_common(self, ip, method):
         out = False
-        args = 'nmap ' + method + ' -sV --top-ports 1000 -Pn'
+        args = 'nmap ' + method + ' -sV --top-ports 1000 -O -Pn'
         nm = nmap.PortScanner()
         try:
             nm.scan(hosts=ip, arguments=args, timeout=600)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
             return 0
+        xx = nm.scanstats()
+        timee = xx['elapsed']
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
@@ -400,20 +413,23 @@ class MainWindow(QMainWindow):
                     if nm[ip][proto][port]['state'] == 'open' or nm[ip][proto][port]['state'] == 'filtered':
                         pp = Port(port, nm[ip]['tcp'][int(port)]['name'], nm[ip]['tcp'][int(port)]['product'],
                                   nm[ip]['tcp'][int(port)]['version'])
-                        MainWindow.add_child(self, ip, pp)
+                        os = nm[ip]['osmatch'][0]['name']
+                        MainWindow.add_child(self, ip, pp, timee, os)
                         print('done  ' + ip + ' ' + str(port))
             print(ip + '  Scan Complete')
             return 0
 
     def port_scan_singal(self, ip, p, method):
         out = False
-        args = 'nmap ' + method + ' -sV -p ' + str(p) + ' -Pn'
+        args = 'nmap ' + method + ' -sV -p ' + str(p) + ' -O -Pn'
         nm = nmap.PortScanner()
         try:
             nm.scan(hosts=ip, arguments=args, timeout=150)
         except nmap.PortScannerTimeout as exc:
             print(ip + '  Scan Complete is timed out')
             return 0
+        xx = nm.scanstats()
+        timee = xx['elapsed']
         if len(nm.all_hosts()) == 0:
             out = True
         if out:
@@ -425,7 +441,8 @@ class MainWindow(QMainWindow):
                     if nm[ip][proto][port]['state'] == 'open':
                         pp = Port(port, nm[ip]['tcp'][int(port)]['name'], nm[ip]['tcp'][int(port)]['product'],
                                   nm[ip]['tcp'][int(port)]['version'])
-                        MainWindow.add_child(self, ip, pp)
+                        os = nm[ip]['osmatch'][0]['name']
+                        MainWindow.add_child(self, ip, pp, timee, os)
                         print('done  ' + ip + ' ' + str(port))
         print(ip + '  Scan Complete')
         return 0
@@ -450,8 +467,10 @@ class MainWindow(QMainWindow):
         item.setText(6, entry.manufacturer)
         MainWindow.ips.append(entry.ip)
 
-    def add_child(self, ip, entry):
+    def add_child(self, ip, entry, time, os):
         t = self.treeWidget.findItems(str(ip), Qt.MatchFlag.MatchExactly, 2)[0]
+        t.setText(5, os)
+        t.setText(7, time)
         item = QtWidgets.QTreeWidgetItem(t)
         item.setText(1, str(entry.port))
         item.setText(2, entry.name)
@@ -561,7 +580,8 @@ class MainWindow(QMainWindow):
             mt = MainThread(self, subnet, x)
             mt.update.connect(self.evt_update)
             mt.start()
-            mt.wait(10)
+            threads.append(mt)
+            mt.wait(15)
 
 
 t = threading.Thread(target=run)

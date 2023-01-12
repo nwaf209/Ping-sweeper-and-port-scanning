@@ -927,7 +927,7 @@ p, li { white-space: pre-wrap; }
          <bool>true</bool>
         </attribute>
         <attribute name="headerDefaultSectionSize">
-         <number>170</number>
+         <number>155</number>
         </attribute>
         <attribute name="headerHighlightSections">
          <bool>true</bool>
@@ -968,6 +968,11 @@ p, li { white-space: pre-wrap; }
         <column>
          <property name="text">
           <string>Manufacturer</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Time</string>
          </property>
         </column>
        </widget>
@@ -1020,6 +1025,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionHost_Name"/>
     <addaction name="actionOS"/>
     <addaction name="actionManufacturer"/>
+    <addaction name="actionTime"/>
    </widget>
    <addaction name="menufile"/>
    <addaction name="menuToggle"/>
@@ -1100,6 +1106,17 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Manufacturer</string>
+   </property>
+  </action>
+  <action name="actionTime">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Time</string>
    </property>
   </action>
  </widget>
