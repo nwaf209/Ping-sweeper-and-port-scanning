@@ -1,20 +1,16 @@
 # TODO Error Handling & Reporting
 # TODO Platform Compatibility
 # TODO GUI Polishing
-# TODO Code clean up & comments
+# TODO Code comments to each functionality
 # TODO Start, Stop and Resume functionality
 # TODO Proper indication of started scanning operations
 # TODO Faster port scanning if possible
-# TODO App name and icon changes
-# TODO complete .exe
-
-#
+# TODO App name and icon changes and complete .exe
 
 
 import subprocess
 import sys
 import csv
-import platform
 from subprocess import check_output
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
@@ -22,9 +18,6 @@ from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
 import threading
-import queue
-import time
-import nmap3
 import nmap
 
 
@@ -60,9 +53,7 @@ def run():
     w = MainWindow()
     widget = QtWidgets.QStackedWidget()
     widget.addWidget(w)
-    # widget.setFixedHeight(900)
     widget.setGeometry(300, 100, 1400, 900)
-    # widget.setFixedWidth(1200)
     widget.show()
     try:
         sys.exit(app.exec_())
